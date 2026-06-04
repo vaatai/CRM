@@ -33,4 +33,14 @@ export type DealStage =
 export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type ActivityType = 'CALL' | 'EMAIL' | 'MEETING' | 'NOTE' | 'TASK' | 'OTHER';
+export type ContactSource =
+  | 'WEBSITE'
+  | 'REFERRAL'
+  | 'SOCIAL_MEDIA'
+  | 'EMAIL_CAMPAIGN'
+  | 'COLD_CALL'
+  | 'ADVERTISEMENT'
+  | 'EVENT'
+  | 'PARTNER'
+  | 'OTHER';
 export type TagColor = 'GRAY' | 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN' | 'BLUE' | 'PURPLE' | 'PINK';

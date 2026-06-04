@@ -219,6 +219,11 @@ async function main() {
       email: 'alice.johnson@techcorp.example.com',
       phone: '+1-555-0101',
       title: 'VP of Engineering',
+      source: 'REFERRAL',
+      address: '100 Tech Way',
+      city: 'San Francisco',
+      state: 'CA',
+      country: 'US',
     },
   });
 
@@ -233,6 +238,11 @@ async function main() {
       email: 'bob.smith@globalretail.example.com',
       phone: '+1-555-0201',
       title: 'Head of Procurement',
+      source: 'COLD_CALL',
+      address: '250 Commerce Blvd',
+      city: 'New York',
+      state: 'NY',
+      country: 'US',
     },
   });
 
@@ -246,6 +256,10 @@ async function main() {
       lastName: 'Davis',
       email: 'carla.davis@greenenergy.example.com',
       title: 'CEO',
+      source: 'EVENT',
+      city: 'Austin',
+      state: 'TX',
+      country: 'US',
     },
   });
 
@@ -257,6 +271,8 @@ async function main() {
       firstName: 'Dan',
       lastName: 'Wilson',
       email: 'dan.wilson@freelance.example.com',
+      phone: '+1-555-0300',
+      source: 'SOCIAL_MEDIA',
       description: 'Independent consultant, potential partner',
     },
   });
