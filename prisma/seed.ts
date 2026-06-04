@@ -362,7 +362,54 @@ async function main() {
     },
   });
 
-  console.log(`  Created ${3} deals`);
+  await prisma.deal.create({
+    data: {
+      organizationId: org.id,
+      ownerId: member.id,
+      createdById: member.id,
+      contactId: contactDan.id,
+      title: 'Consulting Services Agreement',
+      stage: 'PROSPECTING',
+      value: 35000,
+      currency: 'USD',
+      probability: 10,
+      expectedCloseDate: new Date('2026-10-01'),
+    },
+  });
+
+  await prisma.deal.create({
+    data: {
+      organizationId: org.id,
+      ownerId: manager.id,
+      createdById: admin.id,
+      contactId: contactAlice.id,
+      companyId: techCorp.id,
+      title: 'TechCorp Premium Support Add-on',
+      stage: 'NEGOTIATION',
+      value: 45000,
+      currency: 'USD',
+      probability: 75,
+      expectedCloseDate: new Date('2026-07-15'),
+    },
+  });
+
+  await prisma.deal.create({
+    data: {
+      organizationId: org.id,
+      ownerId: member.id,
+      createdById: manager.id,
+      contactId: contactBob.id,
+      companyId: globalRetail.id,
+      title: 'Global Retail Analytics Dashboard',
+      stage: 'CLOSED_LOST',
+      value: 60000,
+      currency: 'USD',
+      probability: 0,
+      closedAt: new Date('2026-05-25'),
+    },
+  });
+
+  console.log(`  Created ${6} deals`);
 
   // ── Tasks ────────────────────────────────────────────────────────────────
   await prisma.task.createMany({
