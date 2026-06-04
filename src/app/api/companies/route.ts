@@ -13,12 +13,6 @@ async function getOrgId(): Promise<string> {
   return result[0].id;
 }
 
-async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new ValidationError('No users found');
-  return user.id;
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -88,7 +82,6 @@ export async function POST(request: NextRequest) {
     }
 
     const orgId = await getOrgId();
-    await getDefaultUserId();
 
     const company = await prisma.company.create({
       data: {
