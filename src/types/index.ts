@@ -5,16 +5,24 @@ export interface NavItem {
   disabled?: boolean;
 }
 
-export interface UserProfile {
-  id: string;
-  clerkId: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  imageUrl: string | null;
-  role: UserRole;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type UserRole = 'ADMIN' | 'MANAGER' | 'MEMBER';
+export type SystemRole = 'SUPER_ADMIN' | 'USER';
+export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED';
+export type LeadSource =
+  | 'WEBSITE'
+  | 'REFERRAL'
+  | 'SOCIAL_MEDIA'
+  | 'EMAIL_CAMPAIGN'
+  | 'COLD_CALL'
+  | 'ADVERTISEMENT'
+  | 'OTHER';
+export type DealStage =
+  | 'PROSPECTING'
+  | 'QUALIFICATION'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'CLOSED_WON'
+  | 'CLOSED_LOST';
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+export type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type ActivityType = 'CALL' | 'EMAIL' | 'MEETING' | 'NOTE' | 'TASK' | 'OTHER';
+export type TagColor = 'GRAY' | 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN' | 'BLUE' | 'PURPLE' | 'PINK';
