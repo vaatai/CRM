@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, User, ChevronLeft, ChevronRight, Target, Users, Building2 } from 'lucide-react';
+import { LayoutDashboard, User, ChevronLeft, ChevronRight, Target, Users, Building2, Kanban } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/store/sidebar';
@@ -14,6 +14,7 @@ const iconMap = {
   Target,
   Users,
   Building2,
+  Kanban,
 } as const;
 
 interface SidebarLink {
@@ -27,6 +28,7 @@ const mainNav: SidebarLink[] = [
   { title: 'Leads', href: '/leads', icon: 'Target' },
   { title: 'Contacts', href: '/contacts', icon: 'Users' },
   { title: 'Companies', href: '/companies', icon: 'Building2' },
+  { title: 'Deals', href: '/deals', icon: 'Kanban' },
 ];
 
 const settingsNav: SidebarLink[] = [{ title: 'Profile', href: '/profile', icon: 'User' }];
