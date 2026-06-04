@@ -48,6 +48,9 @@ interface Contact {
   title: string | null;
   source: string;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   description: string | null;
   companyId: string | null;
   createdAt: string;
@@ -479,9 +482,9 @@ export default function ContactsPage() {
             title: editContact.title ?? '',
             source: editContact.source,
             address: editContact.address ?? '',
-            city: '',
-            state: '',
-            country: '',
+            city: editContact.city ?? '',
+            state: editContact.state ?? '',
+            country: editContact.country ?? '',
             description: editContact.description ?? '',
             companyId: editContact.companyId ?? '',
           }}
