@@ -672,7 +672,7 @@ export default function DealDetailPage() {
                 {deal.tasks.map((task) => (
                   <div key={task.id} className="flex items-center gap-2 text-sm">
                     <span className={`h-2 w-2 rounded-full ${
-                      task.status === 'DONE' ? 'bg-green-500' :
+                      task.status === 'COMPLETED' ? 'bg-green-500' :
                       task.status === 'IN_PROGRESS' ? 'bg-blue-500' : 'bg-gray-300'
                     }`} />
                     <span className="truncate">{task.title}</span>
