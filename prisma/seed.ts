@@ -423,6 +423,7 @@ async function main() {
         title: 'Send proposal document to Alice',
         status: 'IN_PROGRESS',
         priority: 'HIGH',
+        type: 'EMAIL',
         dueDate: new Date('2026-06-10'),
       },
       {
@@ -434,6 +435,7 @@ async function main() {
         title: 'Schedule discovery call with Bob',
         status: 'TODO',
         priority: 'MEDIUM',
+        type: 'CALL',
         dueDate: new Date('2026-06-07'),
       },
       {
@@ -444,6 +446,7 @@ async function main() {
         title: 'Send onboarding materials to GreenEnergy',
         status: 'COMPLETED',
         priority: 'LOW',
+        type: 'EMAIL',
         completedAt: new Date('2026-05-22'),
       },
       {
@@ -453,12 +456,59 @@ async function main() {
         title: 'Update CRM contact records for Q2',
         status: 'TODO',
         priority: 'LOW',
+        type: 'FOLLOW_UP',
         dueDate: new Date('2026-06-30'),
+      },
+      {
+        organizationId: org.id,
+        assigneeId: manager.id,
+        createdById: manager.id,
+        dealId: dealTech.id,
+        contactId: contactAlice.id,
+        title: 'Product demo with TechCorp engineering team',
+        status: 'TODO',
+        priority: 'HIGH',
+        type: 'MEETING',
+        dueDate: new Date('2026-06-12'),
+      },
+      {
+        organizationId: org.id,
+        assigneeId: member.id,
+        createdById: admin.id,
+        contactId: contactBob.id,
+        title: 'Follow up on pricing discussion with Bob',
+        status: 'TODO',
+        priority: 'MEDIUM',
+        type: 'FOLLOW_UP',
+        dueDate: new Date('2026-06-15'),
+      },
+      {
+        organizationId: org.id,
+        assigneeId: manager.id,
+        createdById: admin.id,
+        dealId: dealRetail.id,
+        contactId: contactBob.id,
+        title: 'Quarterly check-in call with Global Retail',
+        status: 'TODO',
+        priority: 'MEDIUM',
+        type: 'CALL',
+        dueDate: new Date('2026-06-20'),
+      },
+      {
+        organizationId: org.id,
+        assigneeId: member.id,
+        createdById: manager.id,
+        contactId: contactCarla.id,
+        title: 'Send contract renewal email to Carla',
+        status: 'IN_PROGRESS',
+        priority: 'HIGH',
+        type: 'EMAIL',
+        dueDate: new Date('2026-06-08'),
       },
     ],
   });
 
-  console.log(`  Created ${4} tasks`);
+  console.log(`  Created ${8} tasks`);
 
   // ── Activities ───────────────────────────────────────────────────────────
   await prisma.activity.createMany({
