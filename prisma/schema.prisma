@@ -18,6 +18,9 @@ enum LeadStatus {
   CONTACTED
   QUALIFIED
   UNQUALIFIED
+  PROPOSAL
+  WON
+  LOST
   CONVERTED
 }
 
@@ -271,6 +274,7 @@ model Lead {
   organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   owner        User?           @relation("LeadOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   contact      Contact?        @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  notes        Note[]          @relation("LeadNotes")
   tags         TagAssignment[]
 
   @@index([organizationId])
@@ -382,6 +386,7 @@ model Note {
   userId         String
   contactId      String?
   dealId         String?
+  leadId         String?
   content        String
   isPinned       Boolean  @default(false)
   createdAt      DateTime @default(now())
@@ -391,10 +396,12 @@ model Note {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   contact      Contact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
   deal         Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  lead         Lead?        @relation("LeadNotes", fields: [leadId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([contactId])
   @@index([dealId])
+  @@index([leadId])
 }
 
 // ─── Tag (polymorphic via TagAssignment) ─────────────────────────────────────
