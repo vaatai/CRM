@@ -71,7 +71,8 @@ export default function LeadsPage() {
     total: 0,
     totalPages: 0,
   });
-  const [search, setSearch] = React.useState(searchParams.get('search') || '');
+  const [searchInput, setSearchInput] = React.useState(searchParams.get('search') || '');
+  const [searchQuery, setSearchQuery] = React.useState(searchParams.get('search') || '');
   const [statusFilter, setStatusFilter] = React.useState(searchParams.get('status') || '');
   const [sourceFilter, setSourceFilter] = React.useState(searchParams.get('source') || '');
   const [sortBy, setSortBy] = React.useState(searchParams.get('sortBy') || 'createdAt');
@@ -92,7 +93,7 @@ export default function LeadsPage() {
     const params = new URLSearchParams();
     params.set('page', String(page));
     params.set('limit', '10');
-    if (search) params.set('search', search);
+    if (searchQuery) params.set('search', searchQuery);
     if (statusFilter) params.set('status', statusFilter);
     if (sourceFilter) params.set('source', sourceFilter);
     params.set('sortBy', sortBy);
@@ -114,13 +115,13 @@ export default function LeadsPage() {
     });
 
     return () => abortController.abort();
-  }, [page, search, statusFilter, sourceFilter, sortBy, sortOrder, fetchKey]);
+  }, [page, searchQuery, statusFilter, sourceFilter, sortBy, sortOrder, fetchKey]);
 
   const loading = isPending;
 
   React.useEffect(() => {
     const params = new URLSearchParams();
-    if (search) params.set('search', search);
+    if (searchQuery) params.set('search', searchQuery);
     if (statusFilter) params.set('status', statusFilter);
     if (sourceFilter) params.set('source', sourceFilter);
     if (sortBy !== 'createdAt') params.set('sortBy', sortBy);
@@ -128,15 +129,15 @@ export default function LeadsPage() {
     if (page > 1) params.set('page', String(page));
     const qs = params.toString();
     router.replace(`/leads${qs ? `?${qs}` : ''}`, { scroll: false });
-  }, [search, statusFilter, sourceFilter, sortBy, sortOrder, page, router]);
+  }, [searchQuery, statusFilter, sourceFilter, sortBy, sortOrder, page, router]);
 
-  const debouncedSearch = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  const debounceTimer = React.useRef<ReturnType<typeof setTimeout>>(undefined);
   function handleSearchChange(value: string) {
-    setSearch(value);
-    setPage(1);
-    clearTimeout(debouncedSearch.current);
-    debouncedSearch.current = setTimeout(() => {
-      // fetchLeads will be triggered by state change
+    setSearchInput(value);
+    clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setSearchQuery(value);
+      setPage(1);
     }, 300);
   }
 
@@ -210,7 +211,7 @@ export default function LeadsPage() {
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search leads..."
-              value={search}
+              value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-9"
             />
@@ -311,7 +312,7 @@ export default function LeadsPage() {
               ) : leads.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-muted-foreground">
-                    {search || statusFilter || sourceFilter
+                    {searchQuery || statusFilter || sourceFilter
                       ? 'No leads match your filters.'
                       : 'No leads yet. Create your first lead to get started.'}
                   </td>

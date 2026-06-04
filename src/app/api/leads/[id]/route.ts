@@ -63,7 +63,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     }
     if (status !== undefined) data.status = status;
     if (source !== undefined) data.source = source;
-    if (value !== undefined) data.value = value !== null ? parseFloat(value) : null;
+    if (value !== undefined) data.value = value ? parseFloat(value) : null;
     if (description !== undefined) data.description = description?.trim() || null;
     if (contactId !== undefined) data.contactId = contactId || null;
     if (ownerId !== undefined) data.ownerId = ownerId || null;
