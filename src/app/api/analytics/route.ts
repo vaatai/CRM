@@ -108,7 +108,13 @@ export async function GET() {
         select: { createdAt: true, status: true },
       }),
       prisma.deal.findMany({
-        where: { organizationId: orgId, createdAt: { gte: sixMonthsAgo } },
+        where: {
+          organizationId: orgId,
+          OR: [
+            { createdAt: { gte: sixMonthsAgo } },
+            { closedAt: { gte: sixMonthsAgo } },
+          ],
+        },
         select: { createdAt: true, stage: true, value: true, closedAt: true },
       }),
       prisma.contact.findMany({

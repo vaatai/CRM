@@ -180,7 +180,7 @@ export default function DashboardPage() {
               value={data.widgets.closedWonDeals}
               subtitle={`${data.widgets.closedLostDeals} lost`}
               icon={<Trophy className="h-5 w-5" />}
-              trend={data.widgets.closedWonDeals > data.widgets.closedLostDeals ? 'up' : 'down'}
+              trend={data.widgets.closedWonDeals > data.widgets.closedLostDeals ? 'up' : data.widgets.closedWonDeals < data.widgets.closedLostDeals ? 'down' : 'neutral'}
             />
             <StatWidget
               title="Revenue"
