@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, User, ChevronLeft, ChevronRight, Target, Users, Building2, Kanban, CheckSquare } from 'lucide-react';
+import { LayoutDashboard, BarChart3, User, ChevronLeft, ChevronRight, Target, Users, Building2, Kanban, CheckSquare } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/store/sidebar';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 
 const iconMap = {
   LayoutDashboard,
+  BarChart3,
   User,
   Target,
   Users,
@@ -25,7 +26,7 @@ interface SidebarLink {
 }
 
 const mainNav: SidebarLink[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
+  { title: 'Dashboard', href: '/dashboard', icon: 'BarChart3' },
   { title: 'Leads', href: '/leads', icon: 'Target' },
   { title: 'Contacts', href: '/contacts', icon: 'Users' },
   { title: 'Companies', href: '/companies', icon: 'Building2' },
