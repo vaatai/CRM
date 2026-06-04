@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, User, ChevronLeft, ChevronRight, Target } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/store/sidebar';
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 const iconMap = {
   LayoutDashboard,
   User,
+  Target,
 } as const;
 
 interface SidebarLink {
@@ -21,13 +22,14 @@ interface SidebarLink {
 
 const mainNav: SidebarLink[] = [
   { title: 'Dashboard', href: '/dashboard', icon: 'LayoutDashboard' },
+  { title: 'Leads', href: '/leads', icon: 'Target' },
 ];
 
 const settingsNav: SidebarLink[] = [{ title: 'Profile', href: '/profile', icon: 'User' }];
 
 function NavLink({ item, collapsed }: { item: SidebarLink; collapsed: boolean }) {
   const pathname = usePathname();
-  const isActive = pathname === item.href;
+  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
   const Icon = iconMap[item.icon];
 
   return (

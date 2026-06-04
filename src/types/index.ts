@@ -6,7 +6,15 @@ export interface NavItem {
 }
 
 export type SystemRole = 'SUPER_ADMIN' | 'USER';
-export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED';
+export type LeadStatus =
+  | 'NEW'
+  | 'CONTACTED'
+  | 'QUALIFIED'
+  | 'UNQUALIFIED'
+  | 'PROPOSAL'
+  | 'WON'
+  | 'LOST'
+  | 'CONVERTED';
 export type LeadSource =
   | 'WEBSITE'
   | 'REFERRAL'
