@@ -152,7 +152,7 @@ export default function ContactDetailPage() {
 
   const loading = isPending && !contact;
 
-  async function handleEdit(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; description: string; companyId: string }) {
+  async function handleEdit(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; city: string; state: string; country: string; description: string; companyId: string }) {
     const res = await fetch(`/api/contacts/${contactId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -674,7 +674,10 @@ export default function ContactDetailPage() {
           phone: contact.phone ?? '',
           title: contact.title ?? '',
           source: contact.source,
-          address: [contact.address, contact.city, contact.state, contact.country].filter(Boolean).join(', '),
+          address: contact.address ?? '',
+          city: contact.city ?? '',
+          state: contact.state ?? '',
+          country: contact.country ?? '',
           description: contact.description ?? '',
           companyId: contact.companyId ?? '',
         }}

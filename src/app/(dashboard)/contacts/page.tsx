@@ -48,6 +48,9 @@ interface Contact {
   title: string | null;
   source: string;
   address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   description: string | null;
   companyId: string | null;
   createdAt: string;
@@ -164,7 +167,7 @@ export default function ContactsPage() {
     setPage(1);
   }
 
-  async function handleCreate(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; description: string; companyId: string }) {
+  async function handleCreate(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; city: string; state: string; country: string; description: string; companyId: string }) {
     const res = await fetch('/api/contacts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -175,7 +178,7 @@ export default function ContactsPage() {
     }
   }
 
-  async function handleEdit(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; description: string; companyId: string }) {
+  async function handleEdit(data: { firstName: string; lastName: string; email: string; phone: string; title: string; source: string; address: string; city: string; state: string; country: string; description: string; companyId: string }) {
     if (!editContact) return;
     const res = await fetch(`/api/contacts/${editContact.id}`, {
       method: 'PATCH',
@@ -479,6 +482,9 @@ export default function ContactsPage() {
             title: editContact.title ?? '',
             source: editContact.source,
             address: editContact.address ?? '',
+            city: editContact.city ?? '',
+            state: editContact.state ?? '',
+            country: editContact.country ?? '',
             description: editContact.description ?? '',
             companyId: editContact.companyId ?? '',
           }}

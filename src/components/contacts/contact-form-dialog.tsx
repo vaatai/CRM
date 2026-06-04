@@ -24,6 +24,9 @@ interface ContactFormData {
   title: string;
   source: string;
   address: string;
+  city: string;
+  state: string;
+  country: string;
   description: string;
   companyId: string;
 }
@@ -58,6 +61,9 @@ function ContactFormInner({
     title: initialData?.title ?? '',
     source: initialData?.source ?? 'OTHER',
     address: initialData?.address ?? '',
+    city: initialData?.city ?? '',
+    state: initialData?.state ?? '',
+    country: initialData?.country ?? '',
     description: initialData?.description ?? '',
     companyId: initialData?.companyId ?? '',
   });
@@ -172,8 +178,38 @@ function ContactFormInner({
             id="address"
             value={form.address}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="123 Main Street, City, Country"
+            placeholder="123 Main Street"
           />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={form.city}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              placeholder="San Francisco"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              value={form.state}
+              onChange={(e) => setForm({ ...form, state: e.target.value })}
+              placeholder="CA"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="country">Country</Label>
+            <Input
+              id="country"
+              value={form.country}
+              onChange={(e) => setForm({ ...form, country: e.target.value })}
+              placeholder="US"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
