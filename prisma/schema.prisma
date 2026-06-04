@@ -57,6 +57,13 @@ enum TaskPriority {
   URGENT
 }
 
+enum TaskType {
+  CALL
+  MEETING
+  EMAIL
+  FOLLOW_UP
+}
+
 enum ActivityType {
   CALL
   EMAIL
@@ -345,6 +352,7 @@ model Task {
   description    String?
   status         TaskStatus   @default(TODO)
   priority       TaskPriority @default(MEDIUM)
+  type           TaskType?
   dueDate        DateTime?
   completedAt    DateTime?
   createdAt      DateTime     @default(now())
