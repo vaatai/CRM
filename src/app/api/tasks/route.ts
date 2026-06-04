@@ -107,6 +107,8 @@ export async function POST(request: NextRequest) {
     const orgId = await getOrgId();
     const userId = await getDefaultUserId();
 
+    const resolvedStatus = status || 'TODO';
+
     const task = await prisma.task.create({
       data: {
         organizationId: orgId,
@@ -114,10 +116,11 @@ export async function POST(request: NextRequest) {
         assigneeId: assigneeId || userId,
         title: title.trim(),
         description: description?.trim() || null,
-        status: status || 'TODO',
+        status: resolvedStatus,
         priority: priority || 'MEDIUM',
         type: type || null,
         dueDate: dueDate ? new Date(dueDate) : null,
+        completedAt: resolvedStatus === 'COMPLETED' ? new Date() : null,
         dealId: dealId || null,
         contactId: contactId || null,
       },
