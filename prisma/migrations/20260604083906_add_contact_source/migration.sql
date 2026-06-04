@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "ContactSource" AS ENUM ('WEBSITE', 'REFERRAL', 'SOCIAL_MEDIA', 'EMAIL_CAMPAIGN', 'COLD_CALL', 'ADVERTISEMENT', 'EVENT', 'PARTNER', 'OTHER');
+
+-- AlterTable
+ALTER TABLE "Contact" ADD COLUMN     "source" "ContactSource" NOT NULL DEFAULT 'OTHER';
