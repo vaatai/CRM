@@ -9,6 +9,9 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // ── Clean existing data ──────────────────────────────────────────────────
+  await prisma.emailEvent.deleteMany();
+  await prisma.email.deleteMany();
+  await prisma.emailTemplate.deleteMany();
   await prisma.tagAssignment.deleteMany();
   await prisma.tag.deleteMany();
   await prisma.note.deleteMany();
@@ -601,6 +604,96 @@ async function main() {
   });
 
   console.log(`  Created ${6} tag assignments`);
+
+  // ── Email Templates ───────────────────────────────────────────────────────
+  await prisma.emailTemplate.createMany({
+    data: [
+      {
+        organizationId: org.id,
+        name: 'Welcome Email',
+        subject: 'Welcome to {{company}}!',
+        body: '<h2>Welcome!</h2><p>Hi {{name}},</p><p>Thank you for your interest in our services. We are excited to have you on board.</p><p>Our team will reach out shortly to discuss how we can help you achieve your goals.</p><p>Best regards,<br/>The {{company}} Team</p>',
+        description: 'Send to new leads and contacts when they first engage',
+      },
+      {
+        organizationId: org.id,
+        name: 'Follow Up',
+        subject: 'Following up on our conversation',
+        body: '<p>Hi {{name}},</p><p>I wanted to follow up on our recent conversation. I hope you had a chance to review the information I shared.</p><p>Would you be available for a quick call this week to discuss next steps?</p><p>Looking forward to hearing from you.</p><p>Best,<br/>{{sender}}</p>',
+        description: 'General follow-up email after initial contact',
+      },
+      {
+        organizationId: org.id,
+        name: 'Proposal Sent',
+        subject: 'Your Proposal from {{company}}',
+        body: '<h2>Your Proposal is Ready</h2><p>Hi {{name}},</p><p>Please find attached our proposal based on our recent discussions. Here is a summary of what we have put together for you:</p><ul><li>Scope of work as discussed</li><li>Timeline and deliverables</li><li>Investment and payment terms</li></ul><p>Please review and let me know if you have any questions. I am happy to schedule a call to walk through the details.</p><p>Best regards,<br/>{{sender}}</p>',
+        description: 'Send when a proposal is ready for the prospect',
+      },
+      {
+        organizationId: org.id,
+        name: 'Meeting Reminder',
+        subject: 'Reminder: Meeting Tomorrow',
+        body: '<p>Hi {{name}},</p><p>Just a friendly reminder about our meeting scheduled for tomorrow.</p><p>Please let me know if you need to reschedule or have any topics you would like to prioritize.</p><p>See you then!</p><p>Best,<br/>{{sender}}</p>',
+        description: 'Remind contacts about upcoming meetings',
+      },
+      {
+        organizationId: org.id,
+        name: 'Thank You - Deal Closed',
+        subject: 'Thank you for choosing {{company}}!',
+        body: '<h2>Thank You!</h2><p>Hi {{name}},</p><p>Thank you for choosing to work with us. We are thrilled to welcome you as a valued partner.</p><p>Our onboarding team will be in touch within the next 24 hours to kick off the project. In the meantime, if you have any questions, do not hesitate to reach out.</p><p>Here is to a great partnership!</p><p>Warm regards,<br/>The {{company}} Team</p>',
+        description: 'Send after successfully closing a deal',
+      },
+    ],
+  });
+
+  console.log(`  Created ${5} email templates`);
+
+  // ── Sample Emails ─────────────────────────────────────────────────────────
+  await prisma.email.createMany({
+    data: [
+      {
+        organizationId: org.id,
+        senderId: admin.id,
+        contactId: contactAlice.id,
+        fromEmail: 'admin@crm-saas.dev',
+        toEmail: 'alice@techcorp.example.com',
+        subject: 'Welcome to Acme Corp!',
+        body: '<h2>Welcome!</h2><p>Hi Alice,</p><p>Thank you for your interest in our services.</p>',
+        status: 'DELIVERED',
+        sentAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        openedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+        openCount: 3,
+        clickCount: 1,
+        clickedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+      },
+      {
+        organizationId: org.id,
+        senderId: manager.id,
+        contactId: contactBob.id,
+        fromEmail: 'manager@crm-saas.dev',
+        toEmail: 'bob@globalretail.example.com',
+        subject: 'Following up on our conversation',
+        body: '<p>Hi Bob,</p><p>I wanted to follow up on our recent conversation about the retail analytics platform.</p>',
+        status: 'OPENED',
+        sentAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+        openedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        openCount: 1,
+      },
+      {
+        organizationId: org.id,
+        senderId: admin.id,
+        contactId: contactCarla.id,
+        fromEmail: 'admin@crm-saas.dev',
+        toEmail: 'carol@greenenergy.example.com',
+        subject: 'Your Proposal from Acme Corp',
+        body: '<h2>Your Proposal is Ready</h2><p>Hi Carol,</p><p>Please find our proposal for the sustainability dashboard.</p>',
+        status: 'SENT',
+        sentAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+    ],
+  });
+
+  console.log(`  Created ${3} sample emails`);
 
   console.log('\n✅ Seed complete!');
 }
