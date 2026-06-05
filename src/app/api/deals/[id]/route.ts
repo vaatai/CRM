@@ -4,11 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'deal');
     const { id } = await context.params;
 
     const deal = await prisma.deal.findUnique({
@@ -59,6 +62,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
 
 export async function PATCH(request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'update', 'deal');
     const { id } = await context.params;
     const body = await request.json();
 
@@ -138,6 +143,8 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
 
 export async function DELETE(_request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'delete', 'deal');
     const { id } = await context.params;
 
     const existing = await prisma.deal.findUnique({ where: { id } });

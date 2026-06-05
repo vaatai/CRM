@@ -4,11 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'activity');
     const { id } = await context.params;
 
     const contact = await prisma.contact.findUnique({ where: { id } });
@@ -32,9 +35,11 @@ export async function GET(_request: NextRequest, context: RouteParams) {
 
 export async function POST(request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'create', 'activity');
     const { id } = await context.params;
     const body = await request.json();
-    const { type, title, description, userId } = body;
+    const { type, title, description } = body;
 
     if (!title || typeof title !== 'string' || title.trim().length === 0) {
       throw new ValidationError('Activity title is required');
@@ -48,17 +53,10 @@ export async function POST(request: NextRequest, context: RouteParams) {
       throw new NotFoundError('Contact');
     }
 
-    let activityUserId = userId;
-    if (!activityUserId) {
-      const firstUser = await prisma.user.findFirst();
-      if (!firstUser) throw new ValidationError('No users found');
-      activityUserId = firstUser.id;
-    }
-
     const activity = await prisma.activity.create({
       data: {
         organizationId: contact.organizationId,
-        userId: activityUserId,
+        userId: ctx.userId,
         contactId: id,
         type,
         title: title.trim(),

@@ -4,20 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-
-const DEMO_ORG_ID_QUERY = `SELECT id FROM "Organization" LIMIT 1`;
-
-async function getOrgId(): Promise<string> {
-  const result = await prisma.$queryRawUnsafe<{ id: string }[]>(DEMO_ORG_ID_QUERY);
-  if (!result[0]) throw new ValidationError('No organization found');
-  return result[0].id;
-}
-
-async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new ValidationError('No users found');
-  return user.id;
-}
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,9 +16,10 @@ export async function GET(request: NextRequest) {
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortOrder = searchParams.get('sortOrder') === 'asc' ? 'asc' : 'desc';
 
-    const orgId = await getOrgId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'deal');
 
-    const where: Record<string, unknown> = { organizationId: orgId };
+    const where: Record<string, unknown> = { organizationId: ctx.organizationId };
 
     if (search) {
       where.OR = [
@@ -88,14 +76,14 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Deal title is required');
     }
 
-    const orgId = await getOrgId();
-    const userId = await getDefaultUserId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'create', 'deal');
 
     const deal = await prisma.deal.create({
       data: {
-        organizationId: orgId,
-        createdById: userId,
-        ownerId: userId,
+        organizationId: ctx.organizationId,
+        createdById: ctx.userId,
+        ownerId: ctx.userId,
         title: title.trim(),
         stage: stage || 'PROSPECTING',
         value: value ? parseFloat(value) : null,

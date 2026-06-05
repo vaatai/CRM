@@ -4,11 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(_request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'note');
     const { id } = await context.params;
 
     const contact = await prisma.contact.findUnique({ where: { id } });
@@ -32,9 +35,11 @@ export async function GET(_request: NextRequest, context: RouteParams) {
 
 export async function POST(request: NextRequest, context: RouteParams) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'create', 'note');
     const { id } = await context.params;
     const body = await request.json();
-    const { content, userId } = body;
+    const { content } = body;
 
     if (!content || typeof content !== 'string' || content.trim().length === 0) {
       throw new ValidationError('Note content is required');
@@ -45,17 +50,10 @@ export async function POST(request: NextRequest, context: RouteParams) {
       throw new NotFoundError('Contact');
     }
 
-    let noteUserId = userId;
-    if (!noteUserId) {
-      const firstUser = await prisma.user.findFirst();
-      if (!firstUser) throw new ValidationError('No users found');
-      noteUserId = firstUser.id;
-    }
-
     const note = await prisma.note.create({
       data: {
         organizationId: contact.organizationId,
-        userId: noteUserId,
+        userId: ctx.userId,
         contactId: id,
         content: content.trim(),
       },

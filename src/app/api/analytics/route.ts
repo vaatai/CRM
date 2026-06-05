@@ -1,19 +1,13 @@
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-
-const DEMO_ORG_ID_QUERY = `SELECT id FROM "Organization" LIMIT 1`;
-
-async function getOrgId(): Promise<string> {
-  const result = await prisma.$queryRawUnsafe<{ id: string }[]>(DEMO_ORG_ID_QUERY);
-  if (!result[0]) throw new ValidationError('No organization found');
-  return result[0].id;
-}
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 export async function GET() {
   try {
-    const orgId = await getOrgId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'analytics');
+    const orgId = ctx.organizationId;
 
     const now = new Date();
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
