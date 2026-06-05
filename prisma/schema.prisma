@@ -85,6 +85,27 @@ enum ContactSource {
   OTHER
 }
 
+enum EmailStatus {
+  DRAFT
+  QUEUED
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+}
+
+enum EmailEventType {
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  COMPLAINED
+  FAILED
+}
+
 enum TagColor {
   GRAY
   RED
@@ -107,16 +128,18 @@ model Organization {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  members   OrganizationMember[]
-  roles     Role[]
-  contacts  Contact[]
-  leads     Lead[]
-  companies Company[]
-  deals     Deal[]
-  tasks     Task[]
-  activities Activity[]
-  notes     Note[]
-  tags      Tag[]
+  members        OrganizationMember[]
+  roles          Role[]
+  contacts       Contact[]
+  leads          Lead[]
+  companies      Company[]
+  deals          Deal[]
+  tasks          Task[]
+  activities     Activity[]
+  notes          Note[]
+  tags           Tag[]
+  emails         Email[]
+  emailTemplates EmailTemplate[]
 
   @@index([slug])
 }
@@ -144,6 +167,7 @@ model User {
   assignedLeads      Lead[]               @relation("LeadOwner")
   assignedContacts   Contact[]            @relation("ContactOwner")
   createdContacts    Contact[]            @relation("ContactCreator")
+  sentEmails         Email[]              @relation("EmailSender")
 
   @@index([clerkId])
   @@index([email])
@@ -269,6 +293,7 @@ model Contact {
   notes        Note[]
   tasks        Task[]
   tags         TagAssignment[]
+  emails       Email[]
 
   @@index([organizationId])
   @@index([ownerId])
@@ -332,6 +357,7 @@ model Deal {
   activities   Activity[]
   notes        Note[]
   tags         TagAssignment[]
+  emails       Email[]
 
   @@index([organizationId])
   @@index([ownerId])
@@ -424,6 +450,80 @@ model Note {
   @@index([contactId])
   @@index([dealId])
   @@index([leadId])
+}
+
+// ─── EmailTemplate ───────────────────────────────────────────────────────────
+
+model EmailTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  subject        String
+  body           String
+  description    String?
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  emails       Email[]
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+// ─── Email ───────────────────────────────────────────────────────────────────
+
+model Email {
+  id             String      @id @default(cuid())
+  organizationId String
+  senderId       String
+  contactId      String?
+  dealId         String?
+  templateId     String?
+  resendId       String?     @unique
+  fromEmail      String
+  toEmail        String
+  subject        String
+  body           String
+  status         EmailStatus @default(QUEUED)
+  sentAt         DateTime?
+  openedAt       DateTime?
+  clickedAt      DateTime?
+  openCount      Int         @default(0)
+  clickCount     Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  sender       User           @relation("EmailSender", fields: [senderId], references: [id])
+  contact      Contact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  deal         Deal?          @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  template     EmailTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  events       EmailEvent[]
+
+  @@index([organizationId])
+  @@index([senderId])
+  @@index([contactId])
+  @@index([dealId])
+  @@index([status])
+  @@index([resendId])
+}
+
+// ─── EmailEvent (tracking) ───────────────────────────────────────────────────
+
+model EmailEvent {
+  id         String         @id @default(cuid())
+  emailId    String
+  type       EmailEventType
+  metadata   String?
+  occurredAt DateTime       @default(now())
+  createdAt  DateTime       @default(now())
+
+  email Email @relation(fields: [emailId], references: [id], onDelete: Cascade)
+
+  @@index([emailId])
+  @@index([type])
 }
 
 // ─── Tag (polymorphic via TagAssignment) ─────────────────────────────────────

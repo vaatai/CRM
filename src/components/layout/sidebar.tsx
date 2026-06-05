@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, BarChart3, User, ChevronLeft, ChevronRight, Target, Users, Building2, Kanban, CheckSquare, Shield, Settings } from 'lucide-react';
+import { LayoutDashboard, BarChart3, User, ChevronLeft, ChevronRight, Target, Users, Building2, Kanban, CheckSquare, Shield, Settings, Mail, FileText } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useSidebarStore } from '@/store/sidebar';
@@ -19,6 +19,8 @@ const iconMap = {
   CheckSquare,
   Shield,
   Settings,
+  Mail,
+  FileText,
 } as const;
 
 interface SidebarLink {
@@ -34,6 +36,8 @@ const mainNav: SidebarLink[] = [
   { title: 'Companies', href: '/companies', icon: 'Building2' },
   { title: 'Deals', href: '/deals', icon: 'Kanban' },
   { title: 'Tasks', href: '/tasks', icon: 'CheckSquare' },
+  { title: 'Emails', href: '/emails', icon: 'Mail' },
+  { title: 'Templates', href: '/email-templates', icon: 'FileText' },
 ];
 
 const settingsNav: SidebarLink[] = [
