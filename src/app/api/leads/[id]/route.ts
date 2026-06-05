@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { getAuthContext, requirePermission } from '@/lib/rbac';
+import { triggerLeadAssigned, triggerLeadStatusChanged } from '@/lib/workflow-engine';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -94,6 +95,27 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     });
 
     logger.info('Lead updated', { leadId: lead.id });
+
+    // Fire workflow triggers
+    if (status !== undefined && status !== existing.status) {
+      triggerLeadStatusChanged(ctx.organizationId, ctx.userId, {
+        leadId: lead.id,
+        leadTitle: lead.title,
+        previousStatus: existing.status,
+        newStatus: status,
+      });
+    }
+    if (ownerId !== undefined && ownerId !== existing.ownerId && ownerId) {
+      const assignee = lead.owner;
+      triggerLeadAssigned(ctx.organizationId, ctx.userId, {
+        leadId: lead.id,
+        leadTitle: lead.title,
+        assigneeId: ownerId,
+        assigneeName: assignee
+          ? `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim()
+          : 'Unknown',
+      });
+    }
 
     return successResponse(lead);
   } catch (error) {

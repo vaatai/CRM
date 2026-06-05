@@ -9,6 +9,11 @@ async function main() {
   console.log('🌱 Seeding database...');
 
   // ── Clean existing data ──────────────────────────────────────────────────
+  await prisma.workflowStepLog.deleteMany();
+  await prisma.workflowExecution.deleteMany();
+  await prisma.workflowStep.deleteMany();
+  await prisma.workflow.deleteMany();
+  await prisma.notification.deleteMany();
   await prisma.emailEvent.deleteMany();
   await prisma.email.deleteMany();
   await prisma.emailTemplate.deleteMany();
@@ -740,6 +745,102 @@ async function main() {
   });
 
   console.log(`  Created ${3} sample emails`);
+
+  // ── Workflows ───────────────────────────────────────────────────────────
+  console.log('\n📋 Creating workflows...');
+
+  await prisma.workflow.create({
+    data: {
+      organizationId: org.id,
+      createdById: admin.id,
+      name: 'Notify on Lead Assignment',
+      description: 'Sends an in-app notification when a lead is assigned to a user',
+      trigger: 'LEAD_ASSIGNED',
+      isActive: true,
+      steps: {
+        create: [
+          {
+            actionType: 'SEND_NOTIFICATION',
+            config: JSON.stringify({ title: 'Lead assigned: {{leadTitle}}', message: 'You have been assigned a new lead: {{leadTitle}}' }),
+            sortOrder: 0,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.workflow.create({
+    data: {
+      organizationId: org.id,
+      createdById: admin.id,
+      name: 'Follow Up on Qualified Lead',
+      description: 'Creates a follow-up task when a lead becomes qualified',
+      trigger: 'LEAD_STATUS_CHANGED',
+      triggerConfig: JSON.stringify({ toStatus: 'QUALIFIED' }),
+      isActive: true,
+      steps: {
+        create: [
+          {
+            actionType: 'CREATE_TASK',
+            config: JSON.stringify({ title: 'Follow up on qualified lead: {{leadTitle}}', description: 'This lead was qualified. Schedule a demo or send a proposal.', priority: 'HIGH', type: 'FOLLOW_UP', dueInDays: 2 }),
+            sortOrder: 0,
+          },
+          {
+            actionType: 'SEND_NOTIFICATION',
+            config: JSON.stringify({ title: 'Lead Qualified: {{leadTitle}}', message: 'A lead has been qualified and a follow-up task has been created.' }),
+            sortOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.workflow.create({
+    data: {
+      organizationId: org.id,
+      createdById: admin.id,
+      name: 'Celebrate Deal Won',
+      description: 'Sends a notification and webhook when a deal is won',
+      trigger: 'DEAL_WON',
+      isActive: true,
+      steps: {
+        create: [
+          {
+            actionType: 'SEND_NOTIFICATION',
+            config: JSON.stringify({ title: 'Deal Won: {{dealTitle}}', message: 'Congratulations! Deal "{{dealTitle}}" worth ${{value}} has been won!' }),
+            sortOrder: 0,
+          },
+          {
+            actionType: 'WEBHOOK',
+            config: JSON.stringify({ url: 'https://hooks.example.com/deal-won', method: 'POST' }),
+            sortOrder: 1,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.workflow.create({
+    data: {
+      organizationId: org.id,
+      createdById: admin.id,
+      name: 'Overdue Task Alert',
+      description: 'Notifies assignee when a task becomes overdue',
+      trigger: 'TASK_OVERDUE',
+      isActive: true,
+      steps: {
+        create: [
+          {
+            actionType: 'SEND_NOTIFICATION',
+            config: JSON.stringify({ title: 'Task Overdue: {{taskTitle}}', message: 'Task "{{taskTitle}}" was due on {{dueDate}}. Please complete it ASAP.' }),
+            sortOrder: 0,
+          },
+        ],
+      },
+    },
+  });
+
+  console.log('  Created 4 sample workflows');
 
   console.log('\n✅ Seed complete!');
 }

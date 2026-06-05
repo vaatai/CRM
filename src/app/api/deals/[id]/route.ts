@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { getAuthContext, requirePermission } from '@/lib/rbac';
+import { triggerDealWon } from '@/lib/workflow-engine';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -134,6 +135,19 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     });
 
     logger.info('Deal updated', { dealId: deal.id });
+
+    // Fire workflow trigger on deal won
+    if (stage === 'CLOSED_WON' && existing.stage !== 'CLOSED_WON') {
+      const contactName = deal.contact
+        ? `${deal.contact.firstName} ${deal.contact.lastName}`.trim()
+        : undefined;
+      triggerDealWon(ctx.organizationId, ctx.userId, {
+        dealId: deal.id,
+        dealTitle: deal.title,
+        value: Number(deal.value) || 0,
+        contactName,
+      });
+    }
 
     return successResponse(deal);
   } catch (error) {
