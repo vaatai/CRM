@@ -78,14 +78,16 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
 
     if (description !== undefined) data.description = description?.trim() || null;
 
-    // Update permissions if provided
+    // Update permissions if provided (atomic transaction)
     if (Array.isArray(permissionIds)) {
-      await prisma.rolePermission.deleteMany({ where: { roleId: id } });
-      if (permissionIds.length > 0) {
-        await prisma.rolePermission.createMany({
-          data: permissionIds.map((pid: string) => ({ roleId: id, permissionId: pid })),
-        });
-      }
+      await prisma.$transaction(async (tx) => {
+        await tx.rolePermission.deleteMany({ where: { roleId: id } });
+        if (permissionIds.length > 0) {
+          await tx.rolePermission.createMany({
+            data: permissionIds.map((pid: string) => ({ roleId: id, permissionId: pid })),
+          });
+        }
+      });
     }
 
     const role = await prisma.role.update({

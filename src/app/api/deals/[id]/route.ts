@@ -14,8 +14,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'deal');
     const { id } = await context.params;
 
-    const deal = await prisma.deal.findUnique({
-      where: { id },
+    const deal = await prisma.deal.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         owner: { select: { id: true, firstName: true, lastName: true, email: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
@@ -67,7 +67,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const existing = await prisma.deal.findUnique({ where: { id } });
+    const existing = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Deal');
     }
@@ -147,7 +147,7 @@ export async function DELETE(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'delete', 'deal');
     const { id } = await context.params;
 
-    const existing = await prisma.deal.findUnique({ where: { id } });
+    const existing = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Deal');
     }

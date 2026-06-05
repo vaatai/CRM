@@ -14,8 +14,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'company');
     const { id } = await context.params;
 
-    const company = await prisma.company.findUnique({
-      where: { id },
+    const company = await prisma.company.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         contacts: {
           select: {
@@ -69,7 +69,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const existing = await prisma.company.findUnique({ where: { id } });
+    const existing = await prisma.company.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Company');
     }
@@ -145,7 +145,7 @@ export async function DELETE(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'delete', 'company');
     const { id } = await context.params;
 
-    const existing = await prisma.company.findUnique({ where: { id } });
+    const existing = await prisma.company.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Company');
     }

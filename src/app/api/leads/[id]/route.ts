@@ -14,8 +14,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'lead');
     const { id } = await context.params;
 
-    const lead = await prisma.lead.findUnique({
-      where: { id },
+    const lead = await prisma.lead.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         owner: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
         contact: {
@@ -52,7 +52,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const existing = await prisma.lead.findUnique({ where: { id } });
+    const existing = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Lead');
     }
@@ -107,7 +107,7 @@ export async function DELETE(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'delete', 'lead');
     const { id } = await context.params;
 
-    const existing = await prisma.lead.findUnique({ where: { id } });
+    const existing = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Lead');
     }
