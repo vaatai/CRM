@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { getAuthContext, requirePermission } from '@/lib/rbac';
+import { triggerLeadAssigned, triggerLeadStatusChanged } from '@/lib/workflow-engine';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -14,8 +15,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'lead');
     const { id } = await context.params;
 
-    const lead = await prisma.lead.findUnique({
-      where: { id },
+    const lead = await prisma.lead.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         owner: { select: { id: true, firstName: true, lastName: true, imageUrl: true } },
         contact: {
@@ -52,7 +53,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const existing = await prisma.lead.findUnique({ where: { id } });
+    const existing = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Lead');
     }
@@ -95,6 +96,27 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
 
     logger.info('Lead updated', { leadId: lead.id });
 
+    // Fire workflow triggers
+    if (status !== undefined && status !== existing.status) {
+      triggerLeadStatusChanged(ctx.organizationId, ctx.userId, {
+        leadId: lead.id,
+        leadTitle: lead.title,
+        previousStatus: existing.status,
+        newStatus: status,
+      });
+    }
+    if (ownerId !== undefined && ownerId !== existing.ownerId && ownerId) {
+      const assignee = lead.owner;
+      triggerLeadAssigned(ctx.organizationId, ctx.userId, {
+        leadId: lead.id,
+        leadTitle: lead.title,
+        assigneeId: ownerId,
+        assigneeName: assignee
+          ? `${assignee.firstName || ''} ${assignee.lastName || ''}`.trim()
+          : 'Unknown',
+      });
+    }
+
     return successResponse(lead);
   } catch (error) {
     return errorResponse(error);
@@ -107,7 +129,7 @@ export async function DELETE(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'delete', 'lead');
     const { id } = await context.params;
 
-    const existing = await prisma.lead.findUnique({ where: { id } });
+    const existing = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Lead');
     }

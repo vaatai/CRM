@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'activity');
     const { id } = await context.params;
 
-    const deal = await prisma.deal.findUnique({ where: { id }, select: { id: true } });
+    const deal = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId }, select: { id: true } });
     if (!deal) throw new NotFoundError('Deal');
 
     const activities = await prisma.activity.findMany({
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
       throw new ValidationError('Activity title is required');
     }
 
-    const deal = await prisma.deal.findUnique({ where: { id }, select: { id: true } });
+    const deal = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId }, select: { id: true } });
     if (!deal) throw new NotFoundError('Deal');
 
     const activity = await prisma.activity.create({

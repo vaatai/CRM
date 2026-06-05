@@ -15,8 +15,8 @@ export async function GET(
     requirePermission(ctx, 'read', 'task');
     const { id } = await context.params;
 
-    const task = await prisma.task.findUnique({
-      where: { id },
+    const task = await prisma.task.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         assignee: { select: { id: true, firstName: true, lastName: true, email: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true, email: true } },
@@ -49,7 +49,7 @@ export async function PATCH(
     const body = await request.json();
     const { title, description, status, priority, type, dueDate, assigneeId, dealId, contactId } = body;
 
-    const existing = await prisma.task.findUnique({ where: { id } });
+    const existing = await prisma.task.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Task');
     }
@@ -106,7 +106,7 @@ export async function DELETE(
     requirePermission(ctx, 'delete', 'task');
     const { id } = await context.params;
 
-    const existing = await prisma.task.findUnique({ where: { id } });
+    const existing = await prisma.task.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Task');
     }

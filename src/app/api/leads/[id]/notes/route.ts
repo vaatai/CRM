@@ -14,7 +14,7 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'note');
     const { id } = await context.params;
 
-    const lead = await prisma.lead.findUnique({ where: { id } });
+    const lead = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!lead) {
       throw new NotFoundError('Lead');
     }
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, context: RouteParams) {
       throw new ValidationError('Note content is required');
     }
 
-    const lead = await prisma.lead.findUnique({ where: { id } });
+    const lead = await prisma.lead.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!lead) {
       throw new NotFoundError('Lead');
     }

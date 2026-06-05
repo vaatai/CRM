@@ -106,6 +106,35 @@ enum EmailEventType {
   FAILED
 }
 
+enum WorkflowTrigger {
+  LEAD_ASSIGNED
+  LEAD_STATUS_CHANGED
+  DEAL_WON
+  TASK_OVERDUE
+}
+
+enum WorkflowActionType {
+  SEND_EMAIL
+  CREATE_TASK
+  SEND_NOTIFICATION
+  WEBHOOK
+}
+
+enum WorkflowExecutionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum WorkflowStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
 enum TagColor {
   GRAY
   RED
@@ -140,6 +169,8 @@ model Organization {
   tags           Tag[]
   emails         Email[]
   emailTemplates EmailTemplate[]
+  workflows      Workflow[]
+  notifications  Notification[]
 
   @@index([slug])
 }
@@ -168,6 +199,8 @@ model User {
   assignedContacts   Contact[]            @relation("ContactOwner")
   createdContacts    Contact[]            @relation("ContactCreator")
   sentEmails         Email[]              @relation("EmailSender")
+  createdWorkflows   Workflow[]           @relation("WorkflowCreator")
+  notifications      Notification[]
 
   @@index([clerkId])
   @@index([email])
@@ -564,4 +597,100 @@ model TagAssignment {
   @@index([dealId])
   @@index([leadId])
   @@index([taskId])
+}
+
+// ─── Workflow (automation) ──────────────────────────────────────────────────
+
+model Workflow {
+  id             String          @id @default(cuid())
+  organizationId String
+  createdById    String
+  name           String
+  description    String?
+  trigger        WorkflowTrigger
+  triggerConfig  String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdBy    User                @relation("WorkflowCreator", fields: [createdById], references: [id])
+  steps        WorkflowStep[]
+  executions   WorkflowExecution[]
+
+  @@index([organizationId])
+  @@index([trigger])
+  @@index([isActive])
+}
+
+model WorkflowStep {
+  id         String             @id @default(cuid())
+  workflowId String
+  actionType WorkflowActionType
+  config     String
+  sortOrder  Int                @default(0)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  workflow   Workflow              @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepLogs   WorkflowStepLog[]
+
+  @@index([workflowId])
+  @@index([sortOrder])
+}
+
+model WorkflowExecution {
+  id          String                  @id @default(cuid())
+  workflowId  String
+  status      WorkflowExecutionStatus @default(PENDING)
+  triggerData String?
+  startedAt   DateTime                @default(now())
+  completedAt DateTime?
+  error       String?
+
+  workflow Workflow          @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  stepLogs WorkflowStepLog[]
+
+  @@index([workflowId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model WorkflowStepLog {
+  id          String             @id @default(cuid())
+  executionId String
+  stepId      String
+  status      WorkflowStepStatus @default(PENDING)
+  output      String?
+  error       String?
+  startedAt   DateTime           @default(now())
+  completedAt DateTime?
+
+  execution WorkflowExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  step      WorkflowStep      @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  @@index([executionId])
+  @@index([stepId])
+}
+
+// ─── Notification ───────────────────────────────────────────────────────────
+
+model Notification {
+  id             String   @id @default(cuid())
+  organizationId String
+  userId         String
+  title          String
+  message        String
+  type           String   @default("info")
+  isRead         Boolean  @default(false)
+  link           String?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
 }

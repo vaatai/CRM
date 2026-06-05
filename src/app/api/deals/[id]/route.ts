@@ -5,6 +5,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { NotFoundError, ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { getAuthContext, requirePermission } from '@/lib/rbac';
+import { triggerDealWon } from '@/lib/workflow-engine';
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -14,8 +15,8 @@ export async function GET(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'read', 'deal');
     const { id } = await context.params;
 
-    const deal = await prisma.deal.findUnique({
-      where: { id },
+    const deal = await prisma.deal.findFirst({
+      where: { id, organizationId: ctx.organizationId },
       include: {
         owner: { select: { id: true, firstName: true, lastName: true, email: true } },
         createdBy: { select: { id: true, firstName: true, lastName: true } },
@@ -67,7 +68,7 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
     const { id } = await context.params;
     const body = await request.json();
 
-    const existing = await prisma.deal.findUnique({ where: { id } });
+    const existing = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Deal');
     }
@@ -135,6 +136,19 @@ export async function PATCH(request: NextRequest, context: RouteParams) {
 
     logger.info('Deal updated', { dealId: deal.id });
 
+    // Fire workflow trigger on deal won
+    if (stage === 'CLOSED_WON' && existing.stage !== 'CLOSED_WON') {
+      const contactName = deal.contact
+        ? `${deal.contact.firstName} ${deal.contact.lastName}`.trim()
+        : undefined;
+      triggerDealWon(ctx.organizationId, ctx.userId, {
+        dealId: deal.id,
+        dealTitle: deal.title,
+        value: Number(deal.value) || 0,
+        contactName,
+      });
+    }
+
     return successResponse(deal);
   } catch (error) {
     return errorResponse(error);
@@ -147,7 +161,7 @@ export async function DELETE(_request: NextRequest, context: RouteParams) {
     requirePermission(ctx, 'delete', 'deal');
     const { id } = await context.params;
 
-    const existing = await prisma.deal.findUnique({ where: { id } });
+    const existing = await prisma.deal.findFirst({ where: { id, organizationId: ctx.organizationId } });
     if (!existing) {
       throw new NotFoundError('Deal');
     }
