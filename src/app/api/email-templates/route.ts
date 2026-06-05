@@ -4,14 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-
-const DEMO_ORG_ID_QUERY = `SELECT id FROM "Organization" LIMIT 1`;
-
-async function getOrgId(): Promise<string> {
-  const result = await prisma.$queryRawUnsafe<{ id: string }[]>(DEMO_ORG_ID_QUERY);
-  if (!result[0]) throw new ValidationError('No organization found');
-  return result[0].id;
-}
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +14,10 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') || '';
     const activeOnly = searchParams.get('activeOnly') === 'true';
 
-    const orgId = await getOrgId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'email');
 
-    const where: Record<string, unknown> = { organizationId: orgId };
+    const where: Record<string, unknown> = { organizationId: ctx.organizationId };
 
     if (search) {
       where.OR = [
@@ -74,11 +68,12 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Template body is required');
     }
 
-    const orgId = await getOrgId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'create', 'email');
 
     const template = await prisma.emailTemplate.create({
       data: {
-        organizationId: orgId,
+        organizationId: ctx.organizationId,
         name: name.trim(),
         subject: subject.trim(),
         body: templateBody.trim(),

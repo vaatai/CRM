@@ -72,39 +72,51 @@ async function main() {
 
   console.log(`  Created organization: ${org.name}`);
 
-  // ── Roles ────────────────────────────────────────────────────────────────
+  // ── Roles (4 system roles) ────────────────────────────────────────────────
+  const ownerRole = await prisma.role.create({
+    data: {
+      name: 'Owner',
+      description: 'Full access to all resources including user and role management',
+      organizationId: org.id,
+      isSystem: true,
+    },
+  });
+
   const adminRole = await prisma.role.create({
     data: {
       name: 'Admin',
-      description: 'Full access to all resources',
+      description: 'Full access to all CRM resources and user management',
       organizationId: org.id,
+      isSystem: true,
     },
   });
 
   const managerRole = await prisma.role.create({
     data: {
       name: 'Manager',
-      description: 'Can manage contacts, deals, and team members',
+      description: 'Can manage leads, contacts, deals, and view reports',
       organizationId: org.id,
+      isSystem: true,
     },
   });
 
-  const memberRole = await prisma.role.create({
+  const salesAgentRole = await prisma.role.create({
     data: {
-      name: 'Member',
-      description: 'Standard access to contacts and deals',
+      name: 'Sales Agent',
+      description: 'Can view and edit leads, contacts, deals; limited delete access',
       organizationId: org.id,
+      isSystem: true,
       isDefault: true,
     },
   });
 
-  console.log(`  Created ${3} roles`);
+  console.log(`  Created 4 system roles`);
 
-  // ── Permissions ──────────────────────────────────────────────────────────
-  const resources = ['contact', 'deal', 'lead', 'company', 'task', 'note', 'activity'];
-  const actions = ['create', 'read', 'update', 'delete'];
+  // ── Permissions (expanded: 11 resources x 5 actions) ─────────────────────
+  const resources = ['lead', 'contact', 'company', 'deal', 'task', 'note', 'activity', 'analytics', 'user', 'role', 'email'];
+  const actions = ['create', 'read', 'update', 'delete', 'manage'];
 
-  const permissions = [];
+  const permMap: Record<string, string> = {};
   for (const resource of resources) {
     for (const action of actions) {
       const perm = await prisma.permission.create({
@@ -114,39 +126,73 @@ async function main() {
           description: `${action} ${resource}`,
         },
       });
-      permissions.push(perm);
+      permMap[`${action}:${resource}`] = perm.id;
     }
   }
 
-  // Admin gets all permissions
-  for (const perm of permissions) {
-    await prisma.rolePermission.create({
-      data: { roleId: adminRole.id, permissionId: perm.id },
-    });
+  const allPermIds = Object.values(permMap);
+  console.log(`  Created ${allPermIds.length} permissions`);
+
+  // Owner gets ALL permissions
+  for (const permId of allPermIds) {
+    await prisma.rolePermission.create({ data: { roleId: ownerRole.id, permissionId: permId } });
   }
 
-  // Manager gets all except delete
-  for (const perm of permissions.filter((p) => p.action !== 'delete')) {
-    await prisma.rolePermission.create({
-      data: { roleId: managerRole.id, permissionId: perm.id },
-    });
+  // Admin gets all CRM CRUD + manage users, read analytics
+  const adminPerms = [
+    ...['lead', 'contact', 'company', 'deal', 'task', 'note', 'activity', 'email'].flatMap(r =>
+      ['create', 'read', 'update', 'delete'].map(a => `${a}:${r}`)
+    ),
+    'read:analytics',
+    'manage:user',
+  ];
+  for (const key of adminPerms) {
+    if (permMap[key]) {
+      await prisma.rolePermission.create({ data: { roleId: adminRole.id, permissionId: permMap[key] } });
+    }
   }
 
-  // Member gets read + create only
-  for (const perm of permissions.filter((p) => p.action === 'read' || p.action === 'create')) {
-    await prisma.rolePermission.create({
-      data: { roleId: memberRole.id, permissionId: perm.id },
-    });
+  // Manager gets CRUD on most CRM resources (no delete on contacts/companies), read analytics, read+create email
+  const managerPerms = [
+    ...['lead', 'deal', 'task', 'note', 'activity'].flatMap(r =>
+      ['create', 'read', 'update', 'delete'].map(a => `${a}:${r}`)
+    ),
+    ...['contact', 'company'].flatMap(r =>
+      ['create', 'read', 'update'].map(a => `${a}:${r}`)
+    ),
+    'read:analytics',
+    'read:email',
+    'create:email',
+  ];
+  for (const key of managerPerms) {
+    if (permMap[key]) {
+      await prisma.rolePermission.create({ data: { roleId: managerRole.id, permissionId: permMap[key] } });
+    }
   }
 
-  console.log(`  Created ${permissions.length} permissions with role assignments`);
+  // Sales Agent gets read on all CRM, create/update on leads, deals, tasks, notes, activities
+  const salesPerms = [
+    ...['lead', 'contact', 'company', 'deal', 'task', 'note', 'activity'].map(r => `read:${r}`),
+    ...['lead', 'deal', 'task', 'note', 'activity'].flatMap(r =>
+      ['create', 'update'].map(a => `${a}:${r}`)
+    ),
+    'read:analytics',
+    'read:email',
+  ];
+  for (const key of salesPerms) {
+    if (permMap[key]) {
+      await prisma.rolePermission.create({ data: { roleId: salesAgentRole.id, permissionId: permMap[key] } });
+    }
+  }
+
+  console.log(`  Assigned permissions to 4 system roles`);
 
   // ── Organization members ─────────────────────────────────────────────────
   await prisma.organizationMember.createMany({
     data: [
-      { userId: admin.id, organizationId: org.id, roleId: adminRole.id },
+      { userId: admin.id, organizationId: org.id, roleId: ownerRole.id },
       { userId: manager.id, organizationId: org.id, roleId: managerRole.id },
-      { userId: member.id, organizationId: org.id, roleId: memberRole.id },
+      { userId: member.id, organizationId: org.id, roleId: salesAgentRole.id },
     ],
   });
 

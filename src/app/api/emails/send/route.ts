@@ -5,20 +5,7 @@ import { successResponse, errorResponse } from '@/lib/api-response';
 import { ValidationError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { resend, FROM_EMAIL } from '@/lib/resend';
-
-const DEMO_ORG_ID_QUERY = `SELECT id FROM "Organization" LIMIT 1`;
-
-async function getOrgId(): Promise<string> {
-  const result = await prisma.$queryRawUnsafe<{ id: string }[]>(DEMO_ORG_ID_QUERY);
-  if (!result[0]) throw new ValidationError('No organization found');
-  return result[0].id;
-}
-
-async function getDefaultUserId(): Promise<string> {
-  const user = await prisma.user.findFirst();
-  if (!user) throw new ValidationError('No users found');
-  return user.id;
-}
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,14 +22,14 @@ export async function POST(request: NextRequest) {
       throw new ValidationError('Email body is required');
     }
 
-    const orgId = await getOrgId();
-    const userId = await getDefaultUserId();
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'create', 'email');
 
     // Create email record in DB first (status: QUEUED)
     const email = await prisma.email.create({
       data: {
-        organizationId: orgId,
-        senderId: userId,
+        organizationId: ctx.organizationId,
+        senderId: ctx.userId,
         contactId: contactId || null,
         dealId: dealId || null,
         templateId: templateId || null,
@@ -127,8 +114,8 @@ export async function POST(request: NextRequest) {
     if (contactId) {
       await prisma.activity.create({
         data: {
-          organizationId: orgId,
-          userId,
+          organizationId: ctx.organizationId,
+          userId: ctx.userId,
           contactId,
           dealId: dealId || null,
           type: 'EMAIL',

@@ -2,24 +2,18 @@ import { NextRequest } from 'next/server';
 
 import { prisma } from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/api-response';
-import { NotFoundError, ValidationError } from '@/lib/errors';
+import { NotFoundError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
-
-const DEMO_ORG_ID_QUERY = `SELECT id FROM "Organization" LIMIT 1`;
-
-async function getOrgId(): Promise<string> {
-  const result = await prisma.$queryRawUnsafe<{ id: string }[]>(DEMO_ORG_ID_QUERY);
-  if (!result[0]) throw new ValidationError('No organization found');
-  return result[0].id;
-}
+import { getAuthContext, requirePermission } from '@/lib/rbac';
 
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'read', 'email');
     const { id } = await context.params;
-    const orgId = await getOrgId();
 
     const email = await prisma.email.findFirst({
-      where: { id, organizationId: orgId },
+      where: { id, organizationId: ctx.organizationId },
       include: {
         sender: { select: { id: true, firstName: true, lastName: true, email: true } },
         contact: { select: { id: true, firstName: true, lastName: true, email: true } },
@@ -41,11 +35,12 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 
 export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
+    const ctx = await getAuthContext();
+    requirePermission(ctx, 'delete', 'email');
     const { id } = await context.params;
-    const orgId = await getOrgId();
 
     const existing = await prisma.email.findFirst({
-      where: { id, organizationId: orgId },
+      where: { id, organizationId: ctx.organizationId },
     });
 
     if (!existing) throw new NotFoundError('Email');
